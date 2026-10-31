@@ -1,0 +1,25 @@
+server:
+  port: 9091
+
+spring:
+  application:
+    name: service-discovery
+
+eureka:
+  instance:
+    hostname: localhost
+
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:9091/eureka/
+
+  server:
+    enable-self-preservation: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

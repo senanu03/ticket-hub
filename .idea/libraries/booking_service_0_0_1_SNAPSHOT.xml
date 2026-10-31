@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="booking-service-0.0.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/booking-service/target/booking-service-0.0.1-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

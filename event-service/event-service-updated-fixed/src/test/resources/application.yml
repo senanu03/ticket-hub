@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: event-service
+  datasource:
+    url: jdbc:h2:mem:event_test_db;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  flyway:
+    enabled: false
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+tickethub:
+  security:
+    jwt-secret: SnapSeatVersion1JwtSecretKeyForTesting123456

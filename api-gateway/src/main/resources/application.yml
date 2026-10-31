@@ -1,0 +1,106 @@
+  server:
+    port: 8085
+
+  spring:
+    application:
+      name: api-gateway
+
+    cloud:
+      gateway:
+        server:
+          webflux:
+
+            # CORS for React frontend
+            globalcors:
+              cors-configurations:
+                '[/**]':
+                  allowed-origins:
+                    - "http://localhost:3000"
+                    - "http://localhost:5173"
+                  allowed-methods: "*"
+                  allowed-headers: "*"
+
+            # Routes through Eureka service discovery
+            routes:
+
+              # Event Service
+              - id: event-service
+                uri: lb://event-service
+                predicates:
+                  - Path=/api/events/**,/api/movies/**,/api/venues/**,/api/screens/**,/api/screen-rows/**,/api/seats/**,/api/shows/**,/api/show-prices/**,/api/show-seats/**
+
+              # Booking Service
+              - id: booking-service
+                uri: lb://booking-service
+                predicates:
+                  - Path=/api/bookings/**
+
+              # Notification Service
+              - id: notification-service
+                uri: lb://notification-service
+                predicates:
+                  - Path=/api/notifications/**
+
+              # Payment Service
+              - id: payment-service
+                uri: lb://payment-service
+                predicates:
+                  - Path=/api/v1/payments/**
+
+              # Auth Service
+              - id: auth-service
+                uri: lb://auth-service
+                predicates:
+                  - Path=/api/auth/**
+
+              # API Documentation routes (OpenAPI / Swagger aggregation)
+              - id: event-service-docs
+                uri: lb://event-service
+                predicates:
+                  - Path=/docs/events/**
+                filters:
+                  - RewritePath=/docs/events/(?<segment>.*), /${segment}
+
+              - id: booking-service-docs
+                uri: lb://booking-service
+                predicates:
+                  - Path=/docs/bookings/**
+                filters:
+                  - RewritePath=/docs/bookings/(?<segment>.*), /${segment}
+
+              - id: payment-service-docs
+                uri: lb://payment-service
+                predicates:
+                  - Path=/docs/payments/**
+                filters:
+                  - RewritePath=/docs/payments/(?<segment>.*), /${segment}
+
+              - id: auth-service-docs
+                uri: lb://auth-service
+                predicates:
+                  - Path=/docs/auth/**
+                filters:
+                  - RewritePath=/docs/auth/(?<segment>.*), /${segment}
+
+              - id: notification-service-docs
+                uri: lb://notification-service
+                predicates:
+                  - Path=/docs/notifications/**
+                filters:
+                  - RewritePath=/docs/notifications/(?<segment>.*), /${segment}
+
+  eureka:
+    client:
+      register-with-eureka: true
+      fetch-registry: true
+      service-url:
+        defaultZone: ${EUREKA_SERVER_URL:http://localhost:9091/eureka/}
+
+    instance:
+      prefer-ip-address: true
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,gateway

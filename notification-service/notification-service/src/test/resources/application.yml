@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:h2:mem:notificationdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      group-id: notification-test-group
+  mail:
+    host: localhost
+    port: 25
+
+booking-service:
+  url: http://localhost:8084
+
+notification:
+  mail:
+    simulate: true
+  email:
+    to: test@tickethub.com
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+tickethub:
+  security:
+    jwt-secret: SnapSeatVersion1JwtSecretKeyForTesting123456

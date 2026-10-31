@@ -1,0 +1,93 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/tickethub_notification?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# ============================================================
+# Booking Service
+# ============================================================
+booking-service:
+  url: ${BOOKING_SERVICE_URL:http://localhost:8084}
+
+# ============================================================
+# Security
+# ============================================================
+tickethub:
+  security:
+    jwt-secret: ${JWT_SECRET:SnapSeatVersion1JwtSecretKeyForTesting123456}
+    service-token-expiration-ms: ${SERVICE_TOKEN_EXPIRATION_MS:300000}
+
+# ============================================================
+# Notification
+# ============================================================
+notification:
+  email:
+    to: ${NOTIFICATION_EMAIL_TO:customer@tickethub.com}
+  mail:
+    simulate: ${NOTIFICATION_MAIL_SIMULATE:true}
+
+# ============================================================
+# Eureka / Service Discovery
+# ============================================================
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:9091/eureka/}
+  instance:
+    prefer-ip-address: true
+
+# ============================================================
+# Logging
+# ============================================================
+logging:
+  level:
+    root: INFO
+    com.tp.snapseat.notification_service: DEBUG
+
+# ============================================================
+# Actuator
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

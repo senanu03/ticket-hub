@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TicketHub Razorpay Test</title>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+
+<h2>TicketHub Razorpay Test</h2>
+
+<p>
+    Booking ID:
+    <strong id="bookingId">Loading...</strong>
+</p>
+
+<label>JWT Token:</label>
+<br>
+
+<input
+        id="token"
+        placeholder="Paste customer JWT here"
+        style="width:700px"
+>
+
+<br><br>
+
+<button onclick="createPayment()">
+    Pay Now
+</button>
+
+<script>
+
+    /*
+     * Booking ID comes from the URL.
+     *
+     * Example:
+     * razorpay-test.html?bookingId=6
+     */
+    const params = new URLSearchParams(window.location.search);
+
+    const bookingId =
+        params.get("bookingId");
+
+    document.getElementById("bookingId").textContent =
+        bookingId || "Missing";
+
+
+    async function createPayment() {
+
+        const token =
+            document.getElementById("token").value.trim();
+
+        if (!bookingId) {
+            alert(
+                "Booking ID is missing from the URL."
+            );
+            return;
+        }
+
+        if (!token) {
+            alert(
+                "JWT token is required"
+            );
+            return;
+        }
+
+        try {
+
+            /*
+             * Create the payment for this booking.
+             *
+             * IMPORTANT:
+             * We do NOT assume Payment ID = Booking ID.
+             */
+            const response = await fetch(
+                "http://localhost:8983/api/v1/payments",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            "Bearer " + token,
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Idempotency-Key":
+                            "booking-" + bookingId
+                    },
+
+                    body: JSON.stringify({
+                        bookingId:
+                            Number(bookingId),
+
+                        method:
+                            "CARD"
+                    })
+                }
+            );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                console.error(
+                    "Payment creation failed:",
+                    errorText
+                );
+
+                alert(
+                    "Could not create payment.\n" +
+                    "HTTP " +
+                    response.status +
+                    "\n\n" +
+                    errorText
+                );
+
+                return;
+            }
+
+
+            /*
+             * Payment Service response.
+             */
+            const payment =
+                await response.json();
+
+            console.log(
+                "Payment created:",
+                payment
+            );
+
+
+            /*
+             * Razorpay Checkout configuration.
+             */
+            const options = {
+
+                key:
+                payment.razorpayKeyId,
+
+                amount:
+                    Math.round(
+                        Number(payment.amount) * 100
+                    ),
+
+                currency:
+                payment.currency,
+
+                name:
+                    "TicketHub",
+
+                description:
+                    "TicketHub Ticket Booking #" +
+                    bookingId,
+
+                order_id:
+                payment.providerOrderId,
+
+                prefill: {
+                    name:
+                        "TicketHub Customer"
+                },
+
+
+                handler:
+                    function (response) {
+
+                        console.log(
+                            "Razorpay payment completed"
+                        );
+
+                        console.log(
+                            "Razorpay Payment ID:",
+                            response.razorpay_payment_id
+                        );
+
+                        console.log(
+                            "Razorpay Order ID:",
+                            response.razorpay_order_id
+                        );
+
+                        console.log(
+                            "Razorpay Signature:",
+                            response.razorpay_signature
+                        );
+
+                        alert(
+                            "Payment completed.\n\n" +
+                            "Razorpay Payment ID: " +
+                            response.razorpay_payment_id +
+                            "\n\n" +
+                            "Wait for the webhook to update TicketHub."
+                        );
+                    },
+
+
+                modal: {
+                    ondismiss:
+                        function () {
+
+                            console.log(
+                                "Razorpay Checkout closed"
+                            );
+                        }
+                },
+
+
+                theme: {
+                    color:
+                        "#3399cc"
+                }
+            };
+
+
+            /*
+             * Open Razorpay Checkout.
+             */
+            const razorpay =
+                new Razorpay(options);
+
+
+            razorpay.on(
+                "payment.failed",
+                function (response) {
+
+                    console.error(
+                        "Razorpay payment failed:",
+                        response.error
+                    );
+
+                    alert(
+                        "Payment failed:\n\n" +
+                        response.error.description
+                    );
+                }
+            );
+
+
+            razorpay.open();
+
+
+        } catch (error) {
+
+            console.error(
+                "Unexpected error:",
+                error
+            );
+
+            alert(
+                "Unable to start payment.\n" +
+                "Check the browser Console."
+            );
+        }
+    }
+
+</script>
+
+</body>
+</html>
